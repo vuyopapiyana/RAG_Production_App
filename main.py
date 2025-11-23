@@ -10,6 +10,9 @@ import uuid
 import datetime
 import os
 from dotenv import load_dotenv
+from data_loader import load_and_chunk_pdf, embed_texts
+from vector_db import QdrantStorage
+from custom_types import RAGQueryResult, RAGSearchResult, RAGUpsertResult, RAGChunkAndSrc
 # ------- Code logic --------------
 load_dotenv()
 
