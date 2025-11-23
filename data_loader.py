@@ -2,6 +2,7 @@ from openai import OpenAI
 from llama_index.readers.file import PDFReader
 from llama_index.core.node_parser import SentenceSplitter
 from dotenv import load_dotenv
+from pathlib import Path
 
 load_dotenv()
 
@@ -12,7 +13,7 @@ EMBED_DIM = 3720
 splitter = SentenceSplitter(chunk_size= 1000, chunk_overlap=200)
 
 def load_and_chunk_pdf(path: str):
-    docs = PDFReader().load_data(path=path)
+    docs = PDFReader().load_data(file=Path(path))
     texts = [d.text for d in docs if getattr(d, "text", None)]
     chunks =[]
 

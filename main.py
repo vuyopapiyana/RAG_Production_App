@@ -36,10 +36,10 @@ async def inngest_pdf(ctx: inngest.Context):
         return RAGChunkAndSrc(chunk=chunks, source_id=source_id)
 
 
-    def _upsert(chunks_and_src: RAGChunkAndSrc)-> RAGUpsertResult:
-        chunks = chunks_and_src.chunks
-        source_id = chunks_and_src.source_id
-        vectors=embed_texts(chunks_and_src.chunks)
+    def _upsert(chunks_and_src_upsert: RAGChunkAndSrc)-> RAGUpsertResult:
+        chunks = chunks_and_src_upsert.chunk
+        source_id = chunks_and_src_upsert.source_id
+        vectors=embed_texts(chunks_and_src_upsert.chunk)
         ids = [str(uuid.uuid5(uuid.NAMESPACE_URL, f"{source_id}: {i}")) for i in range(len(chunks))]
         payloads = [{"source_id": source_id, "text": chunks[i]} for i in range(len(chunks))]
         QdrantStorage().upsert(ids=ids, vectors=vectors, payloads=payloads)
@@ -47,9 +47,11 @@ async def inngest_pdf(ctx: inngest.Context):
         return RAGUpsertResult(ingested=len(chunks))
 
     chunks_and_src = await ctx.step.run("load_and_chunk_pdf", lambda: _load(ctx), output_type=RAGChunkAndSrc)
-    ingested = await ctx.step.run("embedding-and-upsert", lambda: _upsert(chunks_and_src), output_type=RAGUpsertResult)
+    ingested = await ctx.step.run("embedding-and-upsert", lambda: _upsert(chunks_and_src_upsert=chunks_and_src), output_type=RAGUpsertResult)
     return ingested.model_dump()
 
+
+
 # ------ Serving app ---------
-app = FastAPI()
+app = FastAPI(debug=True)
 inngest.fast_api.serve(app=app,client=inngest_client, functions=[inngest_pdf]) # type: ignore[arg-type]
